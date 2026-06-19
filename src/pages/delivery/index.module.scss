@@ -1,0 +1,268 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+.content {
+  padding: $spacing-lg $page-padding;
+}
+
+.section {
+  @include card-base;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.orderInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.orderTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.orderMeta {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: 4rpx;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+}
+
+.previewItem {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background: $color-bg-hover;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+}
+
+.previewBadge {
+  position: absolute;
+  top: $spacing-xs;
+  right: $spacing-xs;
+  padding: 2rpx 8rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: $radius-xs;
+}
+
+.previewBadgeText {
+  font-size: 20rpx;
+  color: $color-text-white;
+}
+
+.fileList {
+  margin-top: $spacing-sm;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.fileIcon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-md;
+  background: $color-bg-tag;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  font-size: 32rpx;
+}
+
+.fileInfo {
+  flex: 1;
+}
+
+.fileName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  @include text-ellipsis;
+}
+
+.fileMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.fileAction {
+  padding: $spacing-xs $spacing-md;
+  background: $color-primary;
+  border-radius: $radius-button;
+}
+
+.fileActionText {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.uploadArea {
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-2xl;
+  text-align: center;
+  transition: all $transition-base;
+
+  &:active {
+    border-color: $color-primary;
+    background: $color-bg-tag;
+  }
+}
+
+.uploadIcon {
+  font-size: 56rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.uploadText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.paymentSection {
+  @include card-base;
+  margin-bottom: $spacing-md;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.paymentLabel {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.paymentAmount {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-price;
+}
+
+.paymentStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.paymentStatusConfirmed {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.paymentStatusPending {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.paymentStatusText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+}
+
+.confirmedText {
+  color: $color-success;
+}
+
+.pendingText {
+  color: $color-warning;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.btnSecondary {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.btnPrimary {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.btnSuccess {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+  }
+}

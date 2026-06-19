@@ -1,0 +1,109 @@
+@use '@/styles/variables.scss' as *;
+
+.timelineItem {
+  display: flex;
+  margin-bottom: $spacing-md;
+}
+
+.timelineLine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: $spacing-md;
+}
+
+.timelineDot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: $radius-round;
+  z-index: 1;
+}
+
+.timelineConnector {
+  flex: 1;
+  width: 4rpx;
+  background: $color-border;
+  margin-top: $spacing-xs;
+}
+
+.card {
+  flex: 1;
+  @include card-base;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.date {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orderTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.description {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  line-height: $line-height-normal;
+}
+
+.feedback {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.feedbackLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.feedbackText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-normal;
+}
+
+.attachments {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.attachment {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+}
+
+.revision {
+  align-self: flex-start;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: $radius-sm;
+}
+
+.revisionText {
+  font-size: $font-size-xs;
+  color: $color-error;
+  font-weight: $font-weight-medium;
+}

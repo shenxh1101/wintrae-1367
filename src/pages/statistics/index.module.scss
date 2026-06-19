@@ -1,0 +1,216 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+.content {
+  padding: $spacing-lg $page-padding;
+}
+
+.overview {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+}
+
+.overviewTitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: $spacing-sm;
+}
+
+.overviewAmount {
+  font-size: 64rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-md;
+}
+
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+}
+
+.overviewItem {
+  text-align: center;
+}
+
+.overviewValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: 4rpx;
+}
+
+.overviewLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.section {
+  @include card-base;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.chartContainer {
+  position: relative;
+  height: 300rpx;
+  margin-bottom: $spacing-md;
+}
+
+.chartBars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 240rpx;
+  padding: 0 $spacing-sm;
+}
+
+.chartBarWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chartBar {
+  width: 40rpx;
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-xs $radius-xs 0 0;
+  transition: all $transition-base;
+  min-height: 8rpx;
+}
+
+.chartBarLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+}
+
+.chartBarValue {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  margin-bottom: 4rpx;
+}
+
+.legendRow {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-lg;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+}
+
+.legendDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  margin-right: 8rpx;
+}
+
+.legendText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.statsCard {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+}
+
+.statsCardValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.statsCardLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.overdueList {
+  margin-top: $spacing-sm;
+}
+
+.overdueItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  border: 1rpx solid rgba(239, 68, 68, 0.2);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.overdueInfo {
+  flex: 1;
+}
+
+.overdueTitle {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  margin-bottom: 4rpx;
+}
+
+.overdueMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.overdueDays {
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: $radius-sm;
+}
+
+.overdueDaysText {
+  font-size: $font-size-xs;
+  color: $color-error;
+  font-weight: $font-weight-medium;
+}
+
+.emptyOverdue {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyOverdueIcon {
+  font-size: 48rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.emptyOverdueText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
