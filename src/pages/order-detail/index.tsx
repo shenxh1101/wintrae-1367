@@ -18,6 +18,7 @@ const OrderDetailPage: React.FC = () => {
   const orders = useAppStore((state) => state.orders);
   const quotations = useAppStore((state) => state.quotations);
   const progressRecords = useAppStore((state) => state.progressRecords);
+  const deliveries = useAppStore((state) => state.deliveries);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const addProgressRecord = useAppStore((state) => state.addProgressRecord);
 
@@ -159,6 +160,29 @@ const OrderDetailPage: React.FC = () => {
               <Text className={styles.infoValue}>{orderProgressRecords.length} 条</Text>
             </View>
           </View>
+
+          {deliveries[orderId!] && (
+            <View className={classnames(styles.paymentCard, {
+              [styles.paymentCardConfirmed]: deliveries[orderId!]?.paymentConfirmed,
+              [styles.paymentCardPending]: !deliveries[orderId!]?.paymentConfirmed
+            })}>
+              <View className={styles.paymentCardRow}>
+                <Text className={styles.paymentCardLabel}>收款状态</Text>
+                <Text className={classnames(styles.paymentCardStatus, {
+                  [styles.paymentStatusGreen]: deliveries[orderId!]?.paymentConfirmed,
+                  [styles.paymentStatusOrange]: !deliveries[orderId!]?.paymentConfirmed
+                })}>
+                  {deliveries[orderId!]?.paymentConfirmed ? '✅ 已确认收款' : '⏳ 等待收款'}
+                </Text>
+              </View>
+              {deliveries[orderId!]?.paymentConfirmed && (
+                <View className={styles.paymentCardRow}>
+                  <Text className={styles.paymentCardLabel}>收款金额</Text>
+                  <Text className={styles.paymentCardAmount}>{formatPrice(deliveries[orderId!]?.paymentAmount || 0)}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View className={styles.statusSection}>
@@ -179,9 +203,27 @@ const OrderDetailPage: React.FC = () => {
                       {statusLabels[status]}
                     </Text>
                     {record ? (
-                      <Text className={styles.timelineDate}>
-                        {formatDate(record.date)} · {record.description}
-                      </Text>
+                      <View>
+                        <Text className={styles.timelineDate}>
+                          {formatDate(record.date)} · {record.description}
+                        </Text>
+                        {record.feedback && (
+                          <View className={styles.recordFeedback}>
+                            <Text className={styles.recordFeedbackLabel}>💬 客户反馈</Text>
+                            <Text className={styles.recordFeedbackText}>{record.feedback}</Text>
+                          </View>
+                        )}
+                        {record.revisionNumber > 0 && (
+                          <View className={styles.recordRevision}>
+                            <Text className={styles.recordRevisionText}>🔄 第 {record.revisionNumber} 次修改</Text>
+                          </View>
+                        )}
+                        {record.attachments && record.attachments.length > 0 && (
+                          <View className={styles.recordAttachments}>
+                            <Text className={styles.recordAttachmentsLabel}>📎 附件：{record.attachments.join('、')}</Text>
+                          </View>
+                        )}
+                      </View>
                     ) : (
                       <Text className={styles.timelineDate}>
                         {isActive ? '进行中...' : '未开始'}

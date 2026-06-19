@@ -155,6 +155,96 @@
   color: $color-text-tertiary;
 }
 
+.recordFeedback {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: $radius-sm;
+}
+
+.recordFeedbackLabel {
+  display: block;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  margin-bottom: 4rpx;
+}
+
+.recordFeedbackText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+}
+
+.recordRevision {
+  margin-top: $spacing-sm;
+}
+
+.recordRevisionText {
+  font-size: $font-size-xs;
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+}
+
+.recordAttachments {
+  margin-top: $spacing-sm;
+}
+
+.recordAttachmentsLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.paymentCard {
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+}
+
+.paymentCardConfirmed {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.paymentCardPending {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.paymentCardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  & + & {
+    margin-top: $spacing-xs;
+  }
+}
+
+.paymentCardLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.paymentCardStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.paymentStatusGreen {
+  color: $color-success;
+}
+
+.paymentStatusOrange {
+  color: $color-warning;
+}
+
+.paymentCardAmount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-price;
+}
+
 .bottomBar {
   position: fixed;
   bottom: 0;

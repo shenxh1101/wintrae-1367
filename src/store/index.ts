@@ -1,12 +1,14 @@
 import { create } from 'zustand';
-import type { Order, Client, Quotation, ProgressRecord, Delivery, DeliveryFile } from '@/types';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import Taro from '@tarojs/taro';
+import type { Order, Client, Quotation, ProgressRecord, DeliveryFile, Statistics } from '@/types';
 import { mockOrders } from '@/data/mockOrders';
 import { mockClients } from '@/data/mockClients';
 import { mockQuotations } from '@/data/mockQuotations';
 import { mockProgress } from '@/data/mockProgress';
 import { calculateTotalPrice } from '@/utils/price';
 
-interface DeliveryRecord {
+export interface DeliveryRecord {
   orderId: string;
   files: DeliveryFile[];
   paymentConfirmed: boolean;
@@ -32,17 +34,10 @@ interface AppState {
   addDeliveryFile: (orderId: string, file: DeliveryFile) => void;
   confirmPayment: (orderId: string, amount: number) => void;
 
-  getStatistics: () => {
-    totalIncome: number;
-    completedOrders: number;
-    pendingOrders: number;
-    averagePrice: number;
-    monthlyIncome: { month: string; income: number; orderCount: number }[];
-    overdueOrders: Order[];
-  };
+  getStatistics: () => Statistics;
 }
 
-const today = new Date().toISOString().split('T')[0];
+const getToday = () => new Date().toISOString().split('T')[0];
 
 const initialDeliveries: Record<string, DeliveryRecord> = {
   'o5': {
@@ -78,194 +73,256 @@ const initialDeliveries: Record<string, DeliveryRecord> = {
   }
 };
 
-export const useAppStore = create<AppState>((set, get) => ({
-  orders: [...mockOrders],
-  clients: [...mockClients],
-  quotations: [...mockQuotations],
-  progressRecords: [...mockProgress],
-  deliveries: { ...initialDeliveries },
-
-  addOrder: (orderData) => {
-    const newId = `o${Date.now()}`;
-    const newQuotationId = `q${Date.now()}`;
-    const priceInfo = calculateTotalPrice(orderData.complexity, orderData.isUrgent, orderData.authorizationScope);
-    
-    const newOrder: Order = {
-      ...orderData,
-      id: newId,
-      createdAt: today,
-      revisionCount: 0,
-      quotationId: newQuotationId
-    };
-
-    const newQuotation: Quotation = {
-      id: newQuotationId,
-      orderId: newId,
-      orderTitle: orderData.title,
-      clientId: orderData.clientId,
-      clientName: orderData.clientName,
-      ...priceInfo,
-      items: [
-        { name: '基础费用', price: priceInfo.basePrice, description: '插画设计基础费用' },
-        { name: '复杂度加成', price: Math.round(priceInfo.basePrice * (priceInfo.complexityMultiplier - 1)), description: `复杂度系数 x${priceInfo.complexityMultiplier}` },
-        ...(priceInfo.urgentSurcharge > 0 ? [{ name: '加急费用', price: Math.round(priceInfo.urgentSurcharge), description: '30%加急费' }] : []),
-        ...(priceInfo.commercialSurcharge > 0 ? [{ name: '授权费用', price: Math.round(priceInfo.commercialSurcharge), description: orderData.authorizationScope === 'commercial' ? '商业授权 50%' : '独家授权 150%' }] : [])
-      ],
-      createdAt: today,
-      status: 'draft',
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    };
-
-    const newProgress: ProgressRecord = {
-      id: `p${Date.now()}`,
-      orderId: newId,
-      orderTitle: orderData.title,
-      status: orderData.status,
-      date: today,
-      description: '订单创建',
-      feedback: '',
-      revisionNumber: 0,
-      attachments: []
-    };
-
-    set((state) => ({
-      orders: [newOrder, ...state.orders],
-      quotations: [newQuotation, ...state.quotations],
-      progressRecords: [newProgress, ...state.progressRecords]
-    }));
+const taroStorage = {
+  getItem: (name: string) => {
+    try {
+      return Promise.resolve(Taro.getStorageSync(name));
+    } catch (e) {
+      return Promise.resolve(null);
+    }
   },
-
-  updateOrderStatus: (orderId, status) => {
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId ? { ...o, status } : o
-      )
-    }));
+  setItem: (name: string, value: string) => {
+    try {
+      Taro.setStorageSync(name, value);
+      return Promise.resolve();
+    } catch (e) {
+      return Promise.resolve();
+    }
   },
-
-  getOrder: (orderId) => {
-    return get().orders.find((o) => o.id === orderId);
-  },
-
-  addProgressRecord: (recordData) => {
-    const newRecord: ProgressRecord = {
-      ...recordData,
-      id: `p${Date.now()}`
-    };
-
-    set((state) => ({
-      progressRecords: [newRecord, ...state.progressRecords]
-    }));
-  },
-
-  getProgressByOrderId: (orderId) => {
-    return get().progressRecords
-      .filter((p) => p.orderId === orderId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  },
-
-  getDeliveryByOrderId: (orderId) => {
-    return get().deliveries[orderId];
-  },
-
-  addDeliveryFile: (orderId, file) => {
-    set((state) => {
-      const existing = state.deliveries[orderId];
-      const quotation = state.quotations.find((q) => q.orderId === orderId);
-      
-      if (existing) {
-        return {
-          deliveries: {
-            ...state.deliveries,
-            [orderId]: {
-              ...existing,
-              files: [...existing.files, file]
-            }
-          }
-        };
-      }
-
-      return {
-        deliveries: {
-          ...state.deliveries,
-          [orderId]: {
-            orderId,
-            files: [file],
-            paymentConfirmed: false,
-            paymentAmount: quotation?.totalPrice || 0,
-            deliveredAt: today
-          }
-        }
-      };
-    });
-  },
-
-  confirmPayment: (orderId, amount) => {
-    set((state) => {
-      const existing = state.deliveries[orderId];
-      
-      if (existing) {
-        return {
-          deliveries: {
-            ...state.deliveries,
-            [orderId]: {
-              ...existing,
-              paymentConfirmed: true,
-              paymentAmount: amount
-            }
-          }
-        };
-      }
-
-      return {
-        deliveries: {
-          ...state.deliveries,
-          [orderId]: {
-            orderId,
-            files: [],
-            paymentConfirmed: true,
-            paymentAmount: amount,
-            deliveredAt: today
-          }
-        }
-      };
-    });
-  },
-
-  getStatistics: () => {
-    const state = get();
-    const deliveredOrders = state.orders.filter((o) => o.status === 'delivered');
-    const pendingOrders = state.orders.filter((o) => o.status !== 'delivered');
-    
-    const confirmedDeliveries = Object.values(state.deliveries).filter((d) => d.paymentConfirmed);
-    const totalIncome = confirmedDeliveries.reduce((sum, d) => sum + d.paymentAmount, 0);
-
-    const monthlyIncome = [
-      { month: '2026-01', income: 12500, orderCount: 4 },
-      { month: '2026-02', income: 8800, orderCount: 3 },
-      { month: '2026-03', income: 15200, orderCount: 5 },
-      { month: '2026-04', income: 18600, orderCount: 6 },
-      { month: '2026-05', income: 22400, orderCount: 7 },
-      { month: '2026-06', income: totalIncome > 0 ? totalIncome : 28500, orderCount: confirmedDeliveries.length > 0 ? confirmedDeliveries.length : 8 }
-    ];
-
-    const overdueOrders = state.orders.filter((o) => {
-      const deadline = new Date(o.deadline);
-      const now = new Date();
-      return now > deadline && o.status !== 'delivered';
-    });
-
-    const averagePrice = confirmedDeliveries.length > 0
-      ? Math.round(totalIncome / confirmedDeliveries.length)
-      : (state.quotations.filter((q) => q.status === 'accepted').reduce((sum, q) => sum + q.totalPrice, 0) / Math.max(state.quotations.filter((q) => q.status === 'accepted').length, 1));
-
-    return {
-      totalIncome,
-      completedOrders: deliveredOrders.length,
-      pendingOrders: pendingOrders.length,
-      averagePrice: Math.round(averagePrice),
-      monthlyIncome,
-      overdueOrders
-    };
+  removeItem: (name: string) => {
+    try {
+      Taro.removeStorageSync(name);
+      return Promise.resolve();
+    } catch (e) {
+      return Promise.resolve();
+    }
   }
-}));
+};
+
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      orders: [...mockOrders],
+      clients: [...mockClients],
+      quotations: [...mockQuotations],
+      progressRecords: [...mockProgress],
+      deliveries: { ...initialDeliveries },
+
+      addOrder: (orderData) => {
+        const today = getToday();
+        const newId = `o${Date.now()}`;
+        const newQuotationId = `q${Date.now()}`;
+        const priceInfo = calculateTotalPrice(orderData.complexity, orderData.isUrgent, orderData.authorizationScope);
+
+        const newOrder: Order = {
+          ...orderData,
+          id: newId,
+          createdAt: today,
+          revisionCount: 0,
+          quotationId: newQuotationId
+        };
+
+        const newQuotation: Quotation = {
+          id: newQuotationId,
+          orderId: newId,
+          orderTitle: orderData.title,
+          clientId: orderData.clientId,
+          clientName: orderData.clientName,
+          ...priceInfo,
+          items: [
+            { name: '基础费用', price: priceInfo.basePrice, description: '插画设计基础费用' },
+            { name: '复杂度加成', price: Math.round(priceInfo.basePrice * (priceInfo.complexityMultiplier - 1)), description: `复杂度系数 x${priceInfo.complexityMultiplier}` },
+            ...(priceInfo.urgentSurcharge > 0 ? [{ name: '加急费用', price: Math.round(priceInfo.urgentSurcharge), description: '30%加急费' }] : []),
+            ...(priceInfo.commercialSurcharge > 0 ? [{ name: '授权费用', price: Math.round(priceInfo.commercialSurcharge), description: orderData.authorizationScope === 'commercial' ? '商业授权 50%' : '独家授权 150%' }] : [])
+          ],
+          createdAt: today,
+          status: 'draft',
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        };
+
+        const newProgress: ProgressRecord = {
+          id: `p${Date.now()}`,
+          orderId: newId,
+          orderTitle: orderData.title,
+          status: orderData.status,
+          date: today,
+          description: '订单创建',
+          feedback: '',
+          revisionNumber: 0,
+          attachments: []
+        };
+
+        set((state) => ({
+          orders: [newOrder, ...state.orders],
+          quotations: [newQuotation, ...state.quotations],
+          progressRecords: [newProgress, ...state.progressRecords]
+        }));
+      },
+
+      updateOrderStatus: (orderId, status) => {
+        set((state) => ({
+          orders: state.orders.map((o) =>
+            o.id === orderId ? { ...o, status } : o
+          )
+        }));
+      },
+
+      getOrder: (orderId) => {
+        return get().orders.find((o) => o.id === orderId);
+      },
+
+      addProgressRecord: (recordData) => {
+        const newRecord: ProgressRecord = {
+          ...recordData,
+          id: `p${Date.now()}`
+        };
+
+        set((state) => ({
+          progressRecords: [newRecord, ...state.progressRecords]
+        }));
+      },
+
+      getProgressByOrderId: (orderId) => {
+        return get().progressRecords
+          .filter((p) => p.orderId === orderId)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      },
+
+      getDeliveryByOrderId: (orderId) => {
+        return get().deliveries[orderId];
+      },
+
+      addDeliveryFile: (orderId, file) => {
+        const today = getToday();
+        set((state) => {
+          const existing = state.deliveries[orderId];
+          const quotation = state.quotations.find((q) => q.orderId === orderId);
+
+          if (existing) {
+            return {
+              deliveries: {
+                ...state.deliveries,
+                [orderId]: {
+                  ...existing,
+                  files: [...existing.files, file]
+                }
+              }
+            };
+          }
+
+          return {
+            deliveries: {
+              ...state.deliveries,
+              [orderId]: {
+                orderId,
+                files: [file],
+                paymentConfirmed: false,
+                paymentAmount: quotation?.totalPrice || 0,
+                deliveredAt: today
+              }
+            }
+          };
+        });
+      },
+
+      confirmPayment: (orderId, amount) => {
+        const today = getToday();
+        set((state) => {
+          const existing = state.deliveries[orderId];
+
+          if (existing) {
+            return {
+              deliveries: {
+                ...state.deliveries,
+                [orderId]: {
+                  ...existing,
+                  paymentConfirmed: true,
+                  paymentAmount: amount
+                }
+              }
+            };
+          }
+
+          return {
+            deliveries: {
+              ...state.deliveries,
+              [orderId]: {
+                orderId,
+                files: [],
+                paymentConfirmed: true,
+                paymentAmount: amount,
+                deliveredAt: today
+              }
+            }
+          };
+        });
+      },
+
+      getStatistics: () => {
+        const state = get();
+        const deliveredOrders = state.orders.filter((o) => o.status === 'delivered');
+        const pendingOrders = state.orders.filter((o) => o.status !== 'delivered');
+
+        const confirmedDeliveries = Object.values(state.deliveries).filter((d) => d.paymentConfirmed);
+        const totalIncome = confirmedDeliveries.reduce((sum, d) => sum + d.paymentAmount, 0);
+
+        const monthlyMap = new Map<string, { income: number; orderCount: number }>();
+        confirmedDeliveries.forEach((d) => {
+          const month = d.deliveredAt.substring(0, 7);
+          const current = monthlyMap.get(month) || { income: 0, orderCount: 0 };
+          monthlyMap.set(month, {
+            income: current.income + d.paymentAmount,
+            orderCount: current.orderCount + 1
+          });
+        });
+
+        const monthlyIncome = Array.from(monthlyMap.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([month, data]) => ({
+            month,
+            income: data.income,
+            orderCount: data.orderCount
+          }));
+
+        if (monthlyIncome.length === 0) {
+          const now = new Date();
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            monthlyIncome.push({ month: key, income: 0, orderCount: 0 });
+          }
+        }
+
+        const overdueOrders = state.orders.filter((o) => {
+          const deadline = new Date(o.deadline);
+          const now = new Date();
+          return now > deadline && o.status !== 'delivered';
+        });
+
+        const averagePrice = confirmedDeliveries.length > 0
+          ? Math.round(totalIncome / confirmedDeliveries.length)
+          : (state.quotations.filter((q) => q.status === 'accepted').reduce((sum, q) => sum + q.totalPrice, 0) / Math.max(state.quotations.filter((q) => q.status === 'accepted').length, 1));
+
+        return {
+          totalIncome,
+          completedOrders: deliveredOrders.length,
+          pendingOrders: pendingOrders.length,
+          averagePrice: Math.round(averagePrice),
+          monthlyIncome,
+          overdueOrders
+        };
+      }
+    }),
+    {
+      name: 'illustrator-app-storage',
+      storage: createJSONStorage(() => taroStorage),
+      partialize: (state) => ({
+        orders: state.orders,
+        clients: state.clients,
+        quotations: state.quotations,
+        progressRecords: state.progressRecords,
+        deliveries: state.deliveries
+      })
+    }
+  )
+);
