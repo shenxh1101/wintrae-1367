@@ -177,56 +177,46 @@ const ProgressDetailPage: React.FC = () => {
           )}
 
           {orderProgressRecords.length > 0 ? (
-            <View className={styles.timeline}>
-              {statusFlow.map((status, index) => {
-                const isActive = statusFlow.indexOf(order.status) >= index;
-                const record = orderProgressRecords.find(p => p.status === status);
-                return (
-                  <View key={status} className={styles.timelineItem}>
-                    <View className={styles.timelineLine}>
-                      <View className={classnames(styles.timelineDot, {
-                        [styles.timelineDotInactive]: !isActive
-                      })} />
-                      {index < statusFlow.length - 1 && <View className={styles.timelineConnector} />}
-                    </View>
-                    <View className={styles.timelineContent}>
-                      <View className={styles.timelineHeader}>
-                        <Text className={styles.timelineStatus}>{statusLabels[status]}</Text>
-                        {record && (
-                          <Text className={styles.timelineDate}>{formatDate(record.date)}</Text>
+            <View className={styles.recordsTimeline}>
+              <Text className={styles.sectionTitle}>全部进度记录 ({orderProgressRecords.length})</Text>
+              <View className={styles.recordsList}>
+                {orderProgressRecords.map((record, recordIndex) => {
+                  const isLast = recordIndex === orderProgressRecords.length - 1;
+                  return (
+                    <View key={record.id} className={styles.recordItem}>
+                      <View className={styles.recordLine}>
+                        <View className={styles.recordDot} />
+                        {!isLast && <View className={styles.recordConnector} />}
+                      </View>
+                      <View className={styles.recordContent}>
+                        <View className={styles.recordHeader}>
+                          <StatusTag status={record.status} size="small" />
+                          <Text className={styles.recordDate}>{formatDate(record.date)}</Text>
+                        </View>
+                        <Text className={styles.recordDescription}>{record.description}</Text>
+                        {record.feedback && (
+                          <View className={styles.feedbackCard}>
+                            <Text className={styles.feedbackLabel}>💬 客户反馈</Text>
+                            <Text className={styles.feedbackText}>{record.feedback}</Text>
+                          </View>
+                        )}
+                        {record.revisionNumber > 0 && (
+                          <View className={styles.revisionTag}>
+                            <Text className={styles.revisionText}>🔄 第 {record.revisionNumber} 次修改</Text>
+                          </View>
+                        )}
+                        {record.attachments && record.attachments.length > 0 && (
+                          <View className={styles.attachments}>
+                            <Text className={styles.attachmentsLabel}>
+                              📎 附件：{record.attachments.join('、')}
+                            </Text>
+                          </View>
                         )}
                       </View>
-                      {record ? (
-                        <>
-                          <Text className={styles.timelineDesc}>{record.description}</Text>
-                          {record.feedback && (
-                            <View className={styles.feedbackCard}>
-                              <Text className={styles.feedbackLabel}>客户反馈</Text>
-                              <Text className={styles.feedbackText}>{record.feedback}</Text>
-                            </View>
-                          )}
-                          {record.attachments && record.attachments.length > 0 && (
-                            <View className={styles.attachments}>
-                              <Text className={styles.attachmentsLabel}>
-                                附件：{record.attachments.join(', ')}
-                              </Text>
-                            </View>
-                          )}
-                          {record.revisionNumber > 0 && (
-                            <View className={styles.revisionTag}>
-                              <Text className={styles.revisionText}>第 {record.revisionNumber} 次修改</Text>
-                            </View>
-                          )}
-                        </>
-                      ) : (
-                        <Text className={styles.timelineDesc} style={{ color: '#9CA3AF' }}>
-                          {isActive ? '进行中...' : '未开始'}
-                        </Text>
-                      )}
                     </View>
-                  </View>
-                );
-              })}
+                  );
+                })}
+              </View>
             </View>
           ) : (
             <View className={styles.emptyContainer}>

@@ -26,11 +26,22 @@
   color: $color-text-secondary;
 }
 
-.timeline {
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.recordsTimeline {
   @include card-base;
 }
 
-.timelineItem {
+.recordsList {
+  margin-top: $spacing-sm;
+}
+
+.recordItem {
   display: flex;
   padding: $spacing-md 0;
   border-bottom: 1rpx solid $color-divider;
@@ -39,61 +50,58 @@
     border-bottom: none;
     padding-bottom: 0;
   }
+
+  &:first-child {
+    padding-top: 0;
+  }
 }
 
-.timelineLine {
+.recordLine {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-right: $spacing-md;
 }
 
-.timelineDot {
-  width: 24rpx;
-  height: 24rpx;
+.recordDot {
+  width: 20rpx;
+  height: 20rpx;
   border-radius: $radius-round;
   background: $color-primary;
-  z-index: 1;
+  flex-shrink: 0;
+  margin-top: 8rpx;
 }
 
-.timelineDotInactive {
-  background: $color-border;
-}
-
-.timelineConnector {
+.recordConnector {
+  width: 2rpx;
   flex: 1;
-  width: 4rpx;
-  background: $color-border;
-  margin-top: $spacing-xs;
+  min-height: 24rpx;
+  background: rgba($color-primary, 0.2);
+  margin: 4rpx 0;
 }
 
-.timelineContent {
+.recordContent {
   flex: 1;
+  min-width: 0;
 }
 
-.timelineHeader {
+.recordHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: $spacing-sm;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
 }
 
-.timelineStatus {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-}
-
-.timelineDate {
+.recordDate {
   font-size: $font-size-xs;
   color: $color-text-tertiary;
 }
 
-.timelineDesc {
+.recordDescription {
   font-size: $font-size-sm;
-  color: $color-text-secondary;
-  line-height: $line-height-normal;
-  margin-bottom: $spacing-sm;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-xs;
 }
 
 .feedbackCard {

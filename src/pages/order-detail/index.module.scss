@@ -101,11 +101,84 @@
   margin-bottom: $spacing-md;
 }
 
-.statusTimeline {
+.stageTimeline {
   @include card-base;
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-sm;
 }
 
-.timelineItem {
+.stageItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.stageLine {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: $spacing-xs;
+}
+
+.stageDot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: $radius-round;
+  background: $color-border;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.stageDotActive {
+  background: $color-primary;
+}
+
+.stageDotCurrent {
+  background: $color-primary;
+  box-shadow: 0 0 0 6rpx rgba($color-primary, 0.2);
+}
+
+.stageConnector {
+  position: absolute;
+  top: 10rpx;
+  left: 50%;
+  width: 100%;
+  height: 4rpx;
+  background: $color-border;
+}
+
+.stageConnectorActive {
+  background: $color-primary;
+}
+
+.stageContent {
+  text-align: center;
+}
+
+.stageLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.stageLabelActive {
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.recordsSection {
+  @include card-base;
+  margin-bottom: $spacing-md;
+}
+
+.recordsList {
+  margin-top: $spacing-sm;
+}
+
+.recordItem {
   display: flex;
   padding: $spacing-md 0;
   border-bottom: 1rpx solid $color-divider;
@@ -120,39 +193,52 @@
   }
 }
 
-.timelineDot {
-  width: 24rpx;
-  height: 24rpx;
-  border-radius: $radius-round;
-  background: $color-border;
+.recordTimeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-right: $spacing-md;
-  margin-top: 6rpx;
-  flex-shrink: 0;
 }
 
-.timelineDotActive {
+.recordDot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: $radius-round;
   background: $color-primary;
+  flex-shrink: 0;
+  margin-top: 8rpx;
 }
 
-.timelineContent {
+.recordConnector {
+  width: 2rpx;
   flex: 1;
+  min-height: 24rpx;
+  background: rgba($color-primary, 0.2);
+  margin: 4rpx 0;
 }
 
-.timelineStatus {
-  font-size: $font-size-md;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  margin-bottom: 4rpx;
+.recordContent {
+  flex: 1;
+  min-width: 0;
 }
 
-.timelineStatusInactive {
-  color: $color-text-tertiary;
-  font-weight: $font-weight-normal;
+.recordHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
 }
 
-.timelineDate {
+.recordDate {
   font-size: $font-size-xs;
   color: $color-text-tertiary;
+}
+
+.recordDescription {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-xs;
 }
 
 .recordFeedback {
@@ -195,6 +281,16 @@
 .recordAttachmentsLabel {
   font-size: $font-size-xs;
   color: $color-text-secondary;
+}
+
+.emptyRecords {
+  padding: $spacing-2xl;
+  text-align: center;
+}
+
+.emptyRecordsText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
 }
 
 .paymentCard {

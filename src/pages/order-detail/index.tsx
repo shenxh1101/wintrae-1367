@@ -186,54 +186,77 @@ const OrderDetailPage: React.FC = () => {
         </View>
 
         <View className={styles.statusSection}>
-          <Text className={styles.sectionTitle}>进度状态</Text>
-          <View className={styles.statusTimeline}>
+          <Text className={styles.sectionTitle}>进度阶段</Text>
+          <View className={styles.stageTimeline}>
             {statusFlow.map((status, index) => {
               const isActive = index <= currentStatusIndex;
-              const record = orderProgressRecords.find(p => p.status === status);
+              const isCurrent = index === currentStatusIndex;
               return (
-                <View key={status} className={styles.timelineItem}>
-                  <View className={classnames(styles.timelineDot, {
-                    [styles.timelineDotActive]: isActive
-                  })} />
-                  <View className={styles.timelineContent}>
-                    <Text className={classnames(styles.timelineStatus, {
-                      [styles.timelineStatusInactive]: !isActive
+                <View key={status} className={styles.stageItem}>
+                  <View className={styles.stageLine}>
+                    <View className={classnames(styles.stageDot, {
+                      [styles.stageDotActive]: isActive,
+                      [styles.stageDotCurrent]: isCurrent
+                    })} />
+                    {index < statusFlow.length - 1 && <View className={classnames(styles.stageConnector, { [styles.stageConnectorActive]: isActive })} />}
+                  </View>
+                  <View className={styles.stageContent}>
+                    <Text className={classnames(styles.stageLabel, {
+                      [styles.stageLabelActive]: isActive
                     })}>
                       {statusLabels[status]}
                     </Text>
-                    {record ? (
-                      <View>
-                        <Text className={styles.timelineDate}>
-                          {formatDate(record.date)} · {record.description}
-                        </Text>
-                        {record.feedback && (
-                          <View className={styles.recordFeedback}>
-                            <Text className={styles.recordFeedbackLabel}>💬 客户反馈</Text>
-                            <Text className={styles.recordFeedbackText}>{record.feedback}</Text>
-                          </View>
-                        )}
-                        {record.revisionNumber > 0 && (
-                          <View className={styles.recordRevision}>
-                            <Text className={styles.recordRevisionText}>🔄 第 {record.revisionNumber} 次修改</Text>
-                          </View>
-                        )}
-                        {record.attachments && record.attachments.length > 0 && (
-                          <View className={styles.recordAttachments}>
-                            <Text className={styles.recordAttachmentsLabel}>📎 附件：{record.attachments.join('、')}</Text>
-                          </View>
-                        )}
-                      </View>
-                    ) : (
-                      <Text className={styles.timelineDate}>
-                        {isActive ? '进行中...' : '未开始'}
-                      </Text>
-                    )}
                   </View>
                 </View>
               );
             })}
           </View>
+        </View>
+
+        <View className={styles.recordsSection}>
+          <Text className={styles.sectionTitle}>全部进度记录 ({orderProgressRecords.length})</Text>
+          {orderProgressRecords.length > 0 ? (
+            <View className={styles.recordsList}>
+              {orderProgressRecords.map((record, recordIndex) => {
+                const isLast = recordIndex === orderProgressRecords.length - 1;
+                return (
+                  <View key={record.id} className={styles.recordItem}>
+                    <View className={styles.recordTimeline}>
+                      <View className={styles.recordDot} />
+                      {!isLast && <View className={styles.recordConnector} />}
+                    </View>
+                    <View className={styles.recordContent}>
+                      <View className={styles.recordHeader}>
+                        <StatusTag status={record.status} size="small" />
+                        <Text className={styles.recordDate}>{formatDate(record.date)}</Text>
+                      </View>
+                      <Text className={styles.recordDescription}>{record.description}</Text>
+                      {record.feedback && (
+                        <View className={styles.recordFeedback}>
+                          <Text className={styles.recordFeedbackLabel}>💬 客户反馈</Text>
+                          <Text className={styles.recordFeedbackText}>{record.feedback}</Text>
+                        </View>
+                      )}
+                      {record.revisionNumber > 0 && (
+                        <View className={styles.recordRevision}>
+                          <Text className={styles.recordRevisionText}>🔄 第 {record.revisionNumber} 次修改</Text>
+                        </View>
+                      )}
+                      {record.attachments && record.attachments.length > 0 && (
+                        <View className={styles.recordAttachments}>
+                          <Text className={styles.recordAttachmentsLabel}>📎 附件：{record.attachments.join('、')}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View className={styles.emptyRecords}>
+              <Text className={styles.emptyRecordsText}>暂无进度记录</Text>
+            </View>
+          )}
         </View>
       </View>
 
