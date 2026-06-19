@@ -10,7 +10,7 @@ import {
   type ComplexityLevel,
   type AuthorizationScope
 } from '@/types';
-import { mockClients } from '@/data/mockClients';
+import { useAppStore } from '@/store';
 import { calculateTotalPrice, formatPrice } from '@/utils/price';
 import styles from './index.module.scss';
 
@@ -19,6 +19,9 @@ const complexityOptions: ComplexityLevel[] = ['simple', 'medium', 'complex'];
 const authorizationOptions: AuthorizationScope[] = ['personal', 'commercial', 'exclusive'];
 
 const OrderCreatePage: React.FC = () => {
+  const clients = useAppStore((state) => state.clients);
+  const addOrder = useAppStore((state) => state.addOrder);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -40,9 +43,9 @@ const OrderCreatePage: React.FC = () => {
 
   const handleClientSelect = () => {
     Taro.showActionSheet({
-      itemList: mockClients.map(c => `${c.name} - ${c.company}`),
+      itemList: clients.map(c => `${c.name} - ${c.company}`),
       success: (res) => {
-        const client = mockClients[res.tapIndex];
+        const client = clients[res.tapIndex];
         handleInputChange('clientId', client.id);
         handleInputChange('clientName', client.name);
       }
@@ -61,15 +64,32 @@ const OrderCreatePage: React.FC = () => {
       formData.authorizationScope
     );
 
-    console.log('[OrderCreate] 创建订单:', { ...formData, ...priceInfo });
-    Taro.showModal({
-      title: '创建成功',
-      content: `订单已创建\n预估报价：${formatPrice(priceInfo.totalPrice)}`,
-      showCancel: false,
-      success: () => {
-        Taro.navigateBack();
-      }
+    addOrder({
+      title: formData.title,
+      description: formData.description || '暂无描述',
+      clientId: formData.clientId,
+      clientName: formData.clientName,
+      status: formData.status,
+      size: formData.size || '未指定',
+      usage: formData.usage || '未指定',
+      authorizationScope: formData.authorizationScope,
+      deadline: formData.deadline,
+      complexity: formData.complexity,
+      isUrgent: formData.isUrgent,
+      maxRevisions: formData.maxRevisions
     });
+
+    Taro.showToast({
+      title: '订单创建成功',
+      icon: 'success',
+      duration: 1500
+    });
+
+    setTimeout(() => {
+      Taro.switchTab({
+        url: '/pages/orders/index'
+      });
+    }, 1500);
   };
 
   const pricePreview = calculateTotalPrice(

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, useRouter } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
-import { mockQuotations } from '@/data/mockQuotations';
+import { useAppStore } from '@/store';
 import { formatPrice } from '@/utils/price';
 import { formatDate } from '@/utils/date';
 import styles from './index.module.scss';
@@ -17,8 +17,9 @@ const statusConfig: Record<string, { label: string; class: string }> = {
 const QuotationDetailPage: React.FC = () => {
   const router = useRouter();
   const quotationId = router.params.id;
+  const quotations = useAppStore((state) => state.quotations);
 
-  const quotation = useMemo(() => mockQuotations.find(q => q.id === quotationId), [quotationId]);
+  const quotation = useMemo(() => quotations.find(q => q.id === quotationId), [quotations, quotationId]);
 
   if (!quotation) {
     return (

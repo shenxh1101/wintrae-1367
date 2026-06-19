@@ -3,9 +3,7 @@ import { View, Text, useRouter } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { statusLabels, complexityLabels, authorizationLabels, type OrderStatus } from '@/types';
-import { mockOrders } from '@/data/mockOrders';
-import { mockQuotations } from '@/data/mockQuotations';
-import { mockProgress } from '@/data/mockProgress';
+import { useAppStore } from '@/store';
 import StatusTag from '@/components/StatusTag';
 import { formatDate, isOverdue, getDeadlineStatus } from '@/utils/date';
 import { formatPrice } from '@/utils/price';
@@ -17,9 +15,18 @@ const OrderDetailPage: React.FC = () => {
   const router = useRouter();
   const orderId = router.params.id;
 
-  const order = useMemo(() => mockOrders.find(o => o.id === orderId), [orderId]);
-  const quotation = useMemo(() => mockQuotations.find(q => q.orderId === orderId), [orderId]);
-  const progressRecords = useMemo(() => mockProgress.filter(p => p.orderId === orderId), [orderId]);
+  const orders = useAppStore((state) => state.orders);
+  const quotations = useAppStore((state) => state.quotations);
+  const progressRecords = useAppStore((state) => state.progressRecords);
+  const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
+  const addProgressRecord = useAppStore((state) => state.addProgressRecord);
+
+  const order = useMemo(() => orders.find(o => o.id === orderId), [orders, orderId]);
+  const quotation = useMemo(() => quotations.find(q => q.orderId === orderId), [quotations, orderId]);
+  const orderProgressRecords = useMemo(
+    () => progressRecords.filter(p => p.orderId === orderId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [progressRecords, orderId]
+  );
 
   if (!order) {
     return (
@@ -36,12 +43,30 @@ const OrderDetailPage: React.FC = () => {
   const currentStatusIndex = statusFlow.indexOf(order.status);
 
   const handleUpdateStatus = () => {
-    console.log('[OrderDetail] 更新订单状态');
+    const nextStatuses = statusFlow.slice(currentStatusIndex + 1);
+    if (nextStatuses.length === 0) {
+      Taro.showToast({ title: '已完成所有阶段', icon: 'none' });
+      return;
+    }
+
     Taro.showActionSheet({
-      itemList: statusFlow.slice(currentStatusIndex + 1).map(s => statusLabels[s]),
+      itemList: nextStatuses.map(s => statusLabels[s]),
       success: (res) => {
-        const nextStatus = statusFlow[currentStatusIndex + 1 + res.tapIndex];
-        console.log('[OrderDetail] 选择状态:', nextStatus);
+        const nextStatus = nextStatuses[res.tapIndex];
+        updateOrderStatus(orderId!, nextStatus);
+        
+        const today = new Date().toISOString().split('T')[0];
+        addProgressRecord({
+          orderId: orderId!,
+          orderTitle: order.title,
+          status: nextStatus,
+          date: today,
+          description: `状态更新为「${statusLabels[nextStatus]}」`,
+          feedback: '',
+          revisionNumber: order.revisionCount,
+          attachments: []
+        });
+
         Taro.showToast({ title: `已更新为${statusLabels[nextStatus]}`, icon: 'success' });
       }
     });
@@ -131,7 +156,7 @@ const OrderDetailPage: React.FC = () => {
             </View>
             <View className={styles.infoItem}>
               <Text className={styles.infoLabel}>进度记录</Text>
-              <Text className={styles.infoValue}>{progressRecords.length} 条</Text>
+              <Text className={styles.infoValue}>{orderProgressRecords.length} 条</Text>
             </View>
           </View>
         </View>
@@ -141,7 +166,7 @@ const OrderDetailPage: React.FC = () => {
           <View className={styles.statusTimeline}>
             {statusFlow.map((status, index) => {
               const isActive = index <= currentStatusIndex;
-              const record = progressRecords.find(p => p.status === status);
+              const record = orderProgressRecords.find(p => p.status === status);
               return (
                 <View key={status} className={styles.timelineItem}>
                   <View className={classnames(styles.timelineDot, {

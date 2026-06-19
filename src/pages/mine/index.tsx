@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { mockStatistics } from '@/data/mockStatistics';
+import { useAppStore } from '@/store';
 import { formatPrice } from '@/utils/price';
 import styles from './index.module.scss';
 
 const MinePage: React.FC = () => {
+  const statistics = useAppStore((state) => state.getStatistics());
   const menuData = [
     {
       section: '业务管理',
@@ -41,19 +42,19 @@ const MinePage: React.FC = () => {
 
       <View className={styles.statsRow}>
         <View className={styles.statItem}>
-          <Text className={styles.statValue}>{formatPrice(mockStatistics.totalIncome)}</Text>
+          <Text className={styles.statValue}>{formatPrice(statistics.totalIncome)}</Text>
           <Text className={styles.statLabel}>总收入</Text>
         </View>
         <View className={styles.statItem}>
-          <Text className={styles.statValue} style={{ color: '#10B981' }}>{mockStatistics.completedOrders}</Text>
+          <Text className={styles.statValue} style={{ color: '#10B981' }}>{statistics.completedOrders}</Text>
           <Text className={styles.statLabel}>已完成</Text>
         </View>
         <View className={styles.statItem}>
-          <Text className={styles.statValue} style={{ color: '#F59E0B' }}>{mockStatistics.pendingOrders}</Text>
+          <Text className={styles.statValue} style={{ color: '#F59E0B' }}>{statistics.pendingOrders}</Text>
           <Text className={styles.statLabel}>进行中</Text>
         </View>
         <View className={styles.statItem}>
-          <Text className={styles.statValue} style={{ color: '#6366F1' }}>{formatPrice(mockStatistics.averagePrice)}</Text>
+          <Text className={styles.statValue} style={{ color: '#6366F1' }}>{formatPrice(statistics.averagePrice)}</Text>
           <Text className={styles.statLabel}>均价</Text>
         </View>
       </View>

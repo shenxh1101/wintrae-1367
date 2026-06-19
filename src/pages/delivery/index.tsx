@@ -1,20 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, Image, useRouter } from '@tarojs/components';
+import React, { useMemo, useState } from 'react';
+import { View, Text, Image, useRouter, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
-import { mockOrders } from '@/data/mockOrders';
-import { mockQuotations } from '@/data/mockQuotations';
+import { useAppStore } from '@/store';
 import { formatPrice } from '@/utils/price';
 import { formatDate } from '@/utils/date';
 import type { DeliveryFile } from '@/types';
 import styles from './index.module.scss';
-
-const mockFiles: DeliveryFile[] = [
-  { id: 'f1', name: '最终稿_剑士艾伦.png', type: 'final', url: 'https://picsum.photos/id/1/800/1200', size: '2.5MB', uploadedAt: '2026-06-18' },
-  { id: 'f2', name: '预览图_剑士艾伦.jpg', type: 'preview', url: 'https://picsum.photos/id/2/400/600', size: '800KB', uploadedAt: '2026-06-18' },
-  { id: 'f3', name: '源文件_剑士艾伦.psd', type: 'source', url: '', size: '45MB', uploadedAt: '2026-06-18' },
-  { id: 'f4', name: '表情差分_剑士艾伦.png', type: 'final', url: 'https://picsum.photos/id/3/800/1200', size: '1.8MB', uploadedAt: '2026-06-18' }
-];
 
 const typeLabels: Record<string, string> = {
   final: '最终',
@@ -32,10 +24,25 @@ const DeliveryPage: React.FC = () => {
   const router = useRouter();
   const orderId = router.params.orderId || 'o1';
 
-  const order = useMemo(() => mockOrders.find(o => o.id === orderId), [orderId]);
-  const quotation = useMemo(() => mockQuotations.find(q => q.orderId === orderId), [orderId]);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [files] = useState<DeliveryFile[]>(mockFiles);
+  const orders = useAppStore((state) => state.orders);
+  const quotations = useAppStore((state) => state.quotations);
+  const deliveries = useAppStore((state) => state.deliveries);
+  const confirmPayment = useAppStore((state) => state.confirmPayment);
+  const addDeliveryFile = useAppStore((state) => state.addDeliveryFile);
+
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    fileName: '',
+    fileType: 'final' as 'final' | 'preview' | 'source',
+    fileSize: ''
+  });
+
+  const order = useMemo(() => orders.find(o => o.id === orderId), [orders, orderId]);
+  const quotation = useMemo(() => quotations.find(q => q.orderId === orderId), [quotations, orderId]);
+  const delivery = useMemo(() => deliveries[orderId], [deliveries, orderId]);
+
+  const files = delivery?.files || [];
+  const paymentConfirmed = delivery?.paymentConfirmed || false;
 
   if (!order) {
     return (
@@ -45,9 +52,38 @@ const DeliveryPage: React.FC = () => {
     );
   }
 
-  const handleUpload = () => {
-    console.log('[Delivery] 上传文件');
-    Taro.showToast({ title: '功能开发中', icon: 'none' });
+  const handleUploadFormChange = (field: string, value: any) => {
+    setUploadForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddFile = () => {
+    if (!uploadForm.fileName) {
+      Taro.showToast({ title: '请输入文件名', icon: 'none' });
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const newFile: DeliveryFile = {
+      id: `f${Date.now()}`,
+      name: uploadForm.fileName,
+      type: uploadForm.fileType,
+      url: uploadForm.fileType === 'source' ? '' : 'https://picsum.photos/seed/delivery/800/600',
+      size: uploadForm.fileSize || '1MB',
+      uploadedAt: today
+    };
+
+    addDeliveryFile(orderId!, newFile);
+    Taro.showToast({ title: '文件已添加', icon: 'success' });
+    setShowUploadForm(false);
+    setUploadForm({
+      fileName: '',
+      fileType: 'final',
+      fileSize: ''
+    });
+  };
+
+  const handleCancelUpload = () => {
+    setShowUploadForm(false);
   };
 
   const handleDownload = (file: DeliveryFile) => {
@@ -56,13 +92,13 @@ const DeliveryPage: React.FC = () => {
   };
 
   const handleConfirmPayment = () => {
-    console.log('[Delivery] 确认收款');
+    const amount = quotation?.totalPrice || 0;
     Taro.showModal({
       title: '确认收款',
-      content: `确认已收到 ${formatPrice(quotation?.totalPrice || 0)} 款项？`,
+      content: `确认已收到 ${formatPrice(amount)} 款项？`,
       success: (res) => {
         if (res.confirm) {
-          setPaymentConfirmed(true);
+          confirmPayment(orderId!, amount);
           Taro.showToast({ title: '收款已确认', icon: 'success' });
         }
       }
@@ -84,44 +120,112 @@ const DeliveryPage: React.FC = () => {
           <View className={styles.orderInfo}>
             <View>
               <Text className={styles.orderTitle}>{order.title}</Text>
-              <Text className={styles.orderMeta}>客户：{order.clientName} · 交付日期：{formatDate(new Date().toISOString())}</Text>
+              <Text className={styles.orderMeta}>
+                客户：{order.clientName} · 交付日期：{delivery?.deliveredAt || formatDate(new Date().toISOString())}
+              </Text>
             </View>
           </View>
         </View>
 
+        {showUploadForm && (
+          <View className={styles.uploadFormCard}>
+            <Text className={styles.formTitle}>添加交付文件</Text>
+            
+            <View className={styles.formItem}>
+              <Text className={styles.formLabel}>
+                <Text className={styles.required}>*</Text>文件名
+              </Text>
+              <Input
+                className={styles.input}
+                placeholder="例如：最终稿_角色设计.png"
+                value={uploadForm.fileName}
+                onInput={(e) => handleUploadFormChange('fileName', e.detail.value)}
+              />
+            </View>
+
+            <View className={styles.formItem}>
+              <Text className={styles.formLabel}>文件类型</Text>
+              <View className={styles.optionRow}>
+                {(['final', 'preview', 'source'] as const).map((type) => (
+                  <View
+                    key={type}
+                    className={classnames(styles.option, {
+                      [styles.optionActive]: uploadForm.fileType === type
+                    })}
+                    onClick={() => handleUploadFormChange('fileType', type)}
+                  >
+                    <Text>{typeLabels[type]}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View className={styles.formItem}>
+              <Text className={styles.formLabel}>文件大小</Text>
+              <Input
+                className={styles.input}
+                placeholder="例如：2.5MB"
+                value={uploadForm.fileSize}
+                onInput={(e) => handleUploadFormChange('fileSize', e.detail.value)}
+              />
+            </View>
+
+            <View className={styles.formActions}>
+              <View className={styles.btnCancel} onClick={handleCancelUpload}>
+                <Text>取消</Text>
+              </View>
+              <View className={styles.btnSubmit} onClick={handleAddFile}>
+                <Text>添加文件</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         <View className={styles.section}>
           <Text className={styles.sectionTitle}>预览图</Text>
-          <View className={styles.previewGrid}>
-            {previewImages.map((file, index) => (
-              <View key={file.id} className={styles.previewItem}>
-                <Image className={styles.previewImage} src={file.url} mode="aspectFill" />
-                <View className={styles.previewBadge}>
-                  <Text className={styles.previewBadgeText}>{typeLabels[file.type]}</Text>
+          {previewImages.length > 0 ? (
+            <View className={styles.previewGrid}>
+              {previewImages.map((file, index) => (
+                <View key={file.id} className={styles.previewItem}>
+                  <Image className={styles.previewImage} src={file.url} mode="aspectFill" />
+                  <View className={styles.previewBadge}>
+                    <Text className={styles.previewBadgeText}>{typeLabels[file.type]}</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          ) : (
+            <View className={styles.emptyBox}>
+              <Text className={styles.emptyText}>暂无预览图</Text>
+            </View>
+          )}
         </View>
 
         <View className={styles.section}>
           <Text className={styles.sectionTitle}>文件列表 ({files.length})</Text>
-          <View className={styles.fileList}>
-            {files.map(file => (
-              <View key={file.id} className={styles.fileItem}>
-                <View className={styles.fileIcon}>
-                  <Text>{typeIcons[file.type]}</Text>
+          {files.length > 0 ? (
+            <View className={styles.fileList}>
+              {files.map(file => (
+                <View key={file.id} className={styles.fileItem}>
+                  <View className={styles.fileIcon}>
+                    <Text>{typeIcons[file.type]}</Text>
+                  </View>
+                  <View className={styles.fileInfo}>
+                    <Text className={styles.fileName}>{file.name}</Text>
+                    <Text className={styles.fileMeta}>{typeLabels[file.type]} · {file.size} · {file.uploadedAt}</Text>
+                  </View>
+                  <View className={styles.fileAction} onClick={() => handleDownload(file)}>
+                    <Text className={styles.fileActionText}>下载</Text>
+                  </View>
                 </View>
-                <View className={styles.fileInfo}>
-                  <Text className={styles.fileName}>{file.name}</Text>
-                  <Text className={styles.fileMeta}>{typeLabels[file.type]} · {file.size} · {file.uploadedAt}</Text>
-                </View>
-                <View className={styles.fileAction} onClick={() => handleDownload(file)}>
-                  <Text className={styles.fileActionText}>下载</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-          <View className={styles.uploadArea} onClick={handleUpload}>
+              ))}
+            </View>
+          ) : (
+            <View className={styles.emptyBox}>
+              <Text className={styles.emptyText}>暂无文件</Text>
+            </View>
+          )}
+          <View className={styles.uploadArea} onClick={() => setShowUploadForm(true)}>
             <Text className={styles.uploadIcon}>📤</Text>
             <Text className={styles.uploadText}>点击上传更多文件</Text>
           </View>

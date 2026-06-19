@@ -3,7 +3,7 @@ import { View, Text, Input, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import type { Client } from '@/types';
-import { mockClients } from '@/data/mockClients';
+import { useAppStore } from '@/store';
 import ClientCard from '@/components/ClientCard';
 import EmptyState from '@/components/EmptyState';
 import styles from './index.module.scss';
@@ -13,6 +13,7 @@ type SortType = 'recent' | 'orders' | 'spent';
 const ClientsPage: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [sortType, setSortType] = useState<SortType>('recent');
+  const clients = useAppStore((state) => state.clients);
 
   const sortOptions: { value: SortType; label: string }[] = [
     { value: 'recent', label: '最近添加' },
@@ -21,11 +22,11 @@ const ClientsPage: React.FC = () => {
   ];
 
   const filteredClients = useMemo(() => {
-    let clients = [...mockClients];
+    let result = [...clients];
 
     if (searchText) {
       const keyword = searchText.toLowerCase();
-      clients = clients.filter(c =>
+      result = result.filter(c =>
         c.name.toLowerCase().includes(keyword) ||
         c.company.toLowerCase().includes(keyword) ||
         c.email.toLowerCase().includes(keyword)
@@ -34,19 +35,19 @@ const ClientsPage: React.FC = () => {
 
     switch (sortType) {
       case 'orders':
-        clients.sort((a, b) => b.totalOrders - a.totalOrders);
+        result.sort((a, b) => b.totalOrders - a.totalOrders);
         break;
       case 'spent':
-        clients.sort((a, b) => b.totalSpent - a.totalSpent);
+        result.sort((a, b) => b.totalSpent - a.totalSpent);
         break;
       case 'recent':
       default:
-        clients.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
     }
 
-    return clients;
-  }, [searchText, sortType]);
+    return result;
+  }, [searchText, sortType, clients]);
 
   const handleCreateClient = () => {
     console.log('[ClientsPage] 点击新建客户');
@@ -63,7 +64,7 @@ const ClientsPage: React.FC = () => {
       <View className={styles.header}>
         <View className={styles.titleRow}>
           <Text className={styles.title}>客户资料</Text>
-          <Text className={styles.clientCount}>共 {mockClients.length} 位客户</Text>
+          <Text className={styles.clientCount}>共 {clients.length} 位客户</Text>
         </View>
         <View className={styles.searchBar}>
           <Text className={styles.searchIcon}>🔍</Text>

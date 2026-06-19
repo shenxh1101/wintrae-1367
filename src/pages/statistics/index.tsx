@@ -1,20 +1,22 @@
 import React, { useMemo } from 'react';
 import { View, Text } from '@tarojs/components';
-import { mockStatistics } from '@/data/mockStatistics';
+import { useAppStore } from '@/store';
 import { formatPrice } from '@/utils/price';
 import { formatDate as formatDateFn, getMonthLabel } from '@/utils/date';
 import { statusLabels } from '@/types';
 import styles from './index.module.scss';
 
 const StatisticsPage: React.FC = () => {
+  const statistics = useAppStore((state) => state.getStatistics());
+
   const maxIncome = useMemo(() => {
-    return Math.max(...mockStatistics.monthlyIncome.map(m => m.income));
-  }, []);
+    return Math.max(...statistics.monthlyIncome.map(m => m.income));
+  }, [statistics]);
 
   const currentMonthIncome = useMemo(() => {
-    const currentMonth = mockStatistics.monthlyIncome[mockStatistics.monthlyIncome.length - 1];
+    const currentMonth = statistics.monthlyIncome[statistics.monthlyIncome.length - 1];
     return currentMonth?.income || 0;
-  }, []);
+  }, [statistics]);
 
   const calculateOverdueDays = (deadline: string): number => {
     const today = new Date();
@@ -28,18 +30,18 @@ const StatisticsPage: React.FC = () => {
       <View className={styles.content}>
         <View className={styles.overview}>
           <Text className={styles.overviewTitle}>累计总收入</Text>
-          <Text className={styles.overviewAmount}>{formatPrice(mockStatistics.totalIncome)}</Text>
+          <Text className={styles.overviewAmount}>{formatPrice(statistics.totalIncome)}</Text>
           <View className={styles.overviewGrid}>
             <View className={styles.overviewItem}>
-              <Text className={styles.overviewValue}>{mockStatistics.completedOrders}</Text>
+              <Text className={styles.overviewValue}>{statistics.completedOrders}</Text>
               <Text className={styles.overviewLabel}>已完成</Text>
             </View>
             <View className={styles.overviewItem}>
-              <Text className={styles.overviewValue}>{mockStatistics.pendingOrders}</Text>
+              <Text className={styles.overviewValue}>{statistics.pendingOrders}</Text>
               <Text className={styles.overviewLabel}>进行中</Text>
             </View>
             <View className={styles.overviewItem}>
-              <Text className={styles.overviewValue}>{formatPrice(mockStatistics.averagePrice)}</Text>
+              <Text className={styles.overviewValue}>{formatPrice(statistics.averagePrice)}</Text>
               <Text className={styles.overviewLabel}>平均单价</Text>
             </View>
           </View>
@@ -49,9 +51,9 @@ const StatisticsPage: React.FC = () => {
           <Text className={styles.sectionTitle}>月收入趋势</Text>
           <View className={styles.chartContainer}>
             <View className={styles.chartBars}>
-              {mockStatistics.monthlyIncome.map((item, index) => {
+              {statistics.monthlyIncome.map((item, index) => {
                 const height = maxIncome > 0 ? (item.income / maxIncome) * 200 : 0;
-                const isCurrent = index === mockStatistics.monthlyIncome.length - 1;
+                const isCurrent = index === statistics.monthlyIncome.length - 1;
                 return (
                   <View key={item.month} className={styles.chartBarWrapper}>
                     <Text className={styles.chartBarValue}>
@@ -86,16 +88,16 @@ const StatisticsPage: React.FC = () => {
               <Text className={styles.statsCardLabel}>本月收入</Text>
             </View>
             <View className={styles.statsCard}>
-              <Text className={styles.statsCardValue}>{mockStatistics.monthlyIncome[mockStatistics.monthlyIncome.length - 1]?.orderCount || 0}</Text>
+              <Text className={styles.statsCardValue}>{statistics.monthlyIncome[statistics.monthlyIncome.length - 1]?.orderCount || 0}</Text>
               <Text className={styles.statsCardLabel}>本月订单</Text>
             </View>
             <View className={styles.statsCard}>
-              <Text className={styles.statsCardValue}>{mockStatistics.overdueOrders.length}</Text>
+              <Text className={styles.statsCardValue}>{statistics.overdueOrders.length}</Text>
               <Text className={styles.statsCardLabel}>逾期订单</Text>
             </View>
             <View className={styles.statsCard}>
               <Text className={styles.statsCardValue}>
-                {mockStatistics.completedOrders + mockStatistics.pendingOrders}
+                {statistics.completedOrders + statistics.pendingOrders}
               </Text>
               <Text className={styles.statsCardLabel}>总订单数</Text>
             </View>
@@ -103,10 +105,10 @@ const StatisticsPage: React.FC = () => {
         </View>
 
         <View className={styles.section}>
-          <Text className={styles.sectionTitle}>逾期订单 ({mockStatistics.overdueOrders.length})</Text>
-          {mockStatistics.overdueOrders.length > 0 ? (
+          <Text className={styles.sectionTitle}>逾期订单 ({statistics.overdueOrders.length})</Text>
+          {statistics.overdueOrders.length > 0 ? (
             <View className={styles.overdueList}>
-              {mockStatistics.overdueOrders.map(order => (
+              {statistics.overdueOrders.map(order => (
                 <View key={order.id} className={styles.overdueItem}>
                   <View className={styles.overdueInfo}>
                     <Text className={styles.overdueTitle}>{order.title}</Text>

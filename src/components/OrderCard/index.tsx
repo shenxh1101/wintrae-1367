@@ -7,7 +7,7 @@ import type { Order } from '@/types';
 import { getDeadlineStatus, isOverdue } from '@/utils/date';
 import { formatPrice } from '@/utils/price';
 import StatusTag from '@/components/StatusTag';
-import { mockQuotations } from '@/data/mockQuotations';
+import { useAppStore } from '@/store';
 import styles from './index.module.scss';
 
 interface OrderCardProps {
@@ -15,8 +15,9 @@ interface OrderCardProps {
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
+  const quotations = useAppStore((state) => state.quotations);
   const deadlineInfo = getDeadlineStatus(order.deadline);
-  const quotation = mockQuotations.find(q => q.id === order.quotationId);
+  const quotation = quotations.find(q => q.id === order.quotationId);
   const overdue = isOverdue(order.deadline);
 
   const handleClick = () => {

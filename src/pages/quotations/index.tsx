@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import type { Quotation } from '@/types';
-import { mockQuotations } from '@/data/mockQuotations';
+import { useAppStore } from '@/store';
 import QuotationCard from '@/components/QuotationCard';
 import EmptyState from '@/components/EmptyState';
 import { formatPrice } from '@/utils/price';
@@ -13,6 +13,7 @@ type FilterType = 'all' | 'draft' | 'sent' | 'accepted' | 'rejected';
 
 const QuotationsPage: React.FC = () => {
   const [filter, setFilter] = useState<FilterType>('all');
+  const quotations = useAppStore((state) => state.quotations);
 
   const filterOptions: { value: FilterType; label: string }[] = [
     { value: 'all', label: '全部' },
@@ -23,24 +24,24 @@ const QuotationsPage: React.FC = () => {
   ];
 
   const stats = useMemo(() => {
-    const accepted = mockQuotations.filter(q => q.status === 'accepted');
+    const accepted = quotations.filter(q => q.status === 'accepted');
     const totalIncome = accepted.reduce((sum, q) => sum + q.totalPrice, 0);
     return {
-      total: mockQuotations.length,
+      total: quotations.length,
       accepted: accepted.length,
       totalIncome
     };
-  }, []);
+  }, [quotations]);
 
   const filteredQuotations = useMemo(() => {
-    let quotations = [...mockQuotations];
+    let result = [...quotations];
 
     if (filter !== 'all') {
-      quotations = quotations.filter(q => q.status === filter);
+      result = result.filter(q => q.status === filter);
     }
 
-    return quotations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [filter]);
+    return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [filter, quotations]);
 
   const handleCreateQuotation = () => {
     console.log('[QuotationsPage] 点击新建报价单');
@@ -57,7 +58,7 @@ const QuotationsPage: React.FC = () => {
       <View className={styles.header}>
         <View className={styles.titleRow}>
           <Text className={styles.title}>报价单</Text>
-          <Text className={styles.quotationCount}>共 {mockQuotations.length} 份</Text>
+          <Text className={styles.quotationCount}>共 {quotations.length} 份</Text>
         </View>
         <View className={styles.statsRow}>
           <View className={styles.statItem}>

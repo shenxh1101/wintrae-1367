@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
 import { statusLabels, type OrderStatus } from '@/types';
-import { mockProgress } from '@/data/mockProgress';
+import { useAppStore } from '@/store';
 import ProgressCard from '@/components/ProgressCard';
 import EmptyState from '@/components/EmptyState';
 import { formatDate } from '@/utils/date';
@@ -10,35 +10,36 @@ import styles from './index.module.scss';
 
 const ProgressPage: React.FC = () => {
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const progressRecords = useAppStore((state) => state.progressRecords);
 
   const statusOptions: (OrderStatus | 'all')[] = ['all', 'consultation', 'draft', 'lineart', 'coloring', 'revision', 'delivered'];
 
   const today = formatDate(new Date().toISOString(), 'M月D日');
 
   const stats = useMemo(() => {
-    const thisWeek = mockProgress.filter(p => {
+    const thisWeek = progressRecords.filter(p => {
       const date = new Date(p.date);
       const now = new Date();
       const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
       return diffDays <= 7;
     });
-    const totalRevisions = mockProgress.filter(p => p.revisionNumber > 0).length;
+    const totalRevisions = progressRecords.filter(p => p.revisionNumber > 0).length;
     return {
-      total: mockProgress.length,
+      total: progressRecords.length,
       thisWeek: thisWeek.length,
       revisions: totalRevisions
     };
-  }, []);
+  }, [progressRecords]);
 
   const filteredProgress = useMemo(() => {
-    let records = [...mockProgress];
+    let records = [...progressRecords];
 
     if (filter !== 'all') {
       records = records.filter(p => p.status === filter);
     }
 
     return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [filter]);
+  }, [filter, progressRecords]);
 
   const handleFilterChange = (type: OrderStatus | 'all') => {
     console.log('[ProgressPage] 切换筛选:', type);

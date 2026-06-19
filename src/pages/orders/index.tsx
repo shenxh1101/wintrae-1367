@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { statusLabels, type OrderStatus } from '@/types';
 import type { Order } from '@/types';
-import { mockOrders } from '@/data/mockOrders';
+import { useAppStore } from '@/store';
 import OrderCard from '@/components/OrderCard';
 import EmptyState from '@/components/EmptyState';
 import { formatDate } from '@/utils/date';
@@ -13,6 +13,7 @@ import styles from './index.module.scss';
 const OrdersPage: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
+  const orders = useAppStore((state) => state.orders);
 
   const today = formatDate(new Date().toISOString(), 'YYYY年M月D日');
 
@@ -20,36 +21,36 @@ const OrdersPage: React.FC = () => {
 
   const stats = useMemo(() => {
     return {
-      total: mockOrders.length,
-      inProgress: mockOrders.filter(o => ['draft', 'lineart', 'coloring', 'revision'].includes(o.status)).length,
-      consultation: mockOrders.filter(o => o.status === 'consultation').length,
-      delivered: mockOrders.filter(o => o.status === 'delivered').length,
-      overdue: mockOrders.filter(o => {
+      total: orders.length,
+      inProgress: orders.filter(o => ['draft', 'lineart', 'coloring', 'revision'].includes(o.status)).length,
+      consultation: orders.filter(o => o.status === 'consultation').length,
+      delivered: orders.filter(o => o.status === 'delivered').length,
+      overdue: orders.filter(o => {
         const deadline = new Date(o.deadline);
         const now = new Date();
         return now > deadline && o.status !== 'delivered';
       }).length
     };
-  }, []);
+  }, [orders]);
 
   const filteredOrders = useMemo(() => {
-    let orders = [...mockOrders];
+    let result = [...orders];
 
     if (activeFilter !== 'all') {
-      orders = orders.filter(o => o.status === activeFilter);
+      result = result.filter(o => o.status === activeFilter);
     }
 
     if (searchText) {
       const keyword = searchText.toLowerCase();
-      orders = orders.filter(o =>
+      result = result.filter(o =>
         o.title.toLowerCase().includes(keyword) ||
         o.clientName.toLowerCase().includes(keyword) ||
         o.description.toLowerCase().includes(keyword)
       );
     }
 
-    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [searchText, activeFilter]);
+    return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [searchText, activeFilter, orders]);
 
   const handleCreateOrder = () => {
     console.log('[OrdersPage] 点击新建订单');

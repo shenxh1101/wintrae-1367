@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, Image, useRouter } from '@tarojs/components';
-import { mockClients } from '@/data/mockClients';
-import { mockOrders } from '@/data/mockOrders';
-import { mockQuotations } from '@/data/mockQuotations';
+import { useAppStore } from '@/store';
 import { formatPrice } from '@/utils/price';
 import { formatDate } from '@/utils/date';
 import { statusLabels } from '@/types';
@@ -11,9 +9,12 @@ import styles from './index.module.scss';
 const ClientDetailPage: React.FC = () => {
   const router = useRouter();
   const clientId = router.params.id;
+  const clients = useAppStore((state) => state.clients);
+  const orders = useAppStore((state) => state.orders);
+  const quotations = useAppStore((state) => state.quotations);
 
-  const client = useMemo(() => mockClients.find(c => c.id === clientId), [clientId]);
-  const clientOrders = useMemo(() => mockOrders.filter(o => o.clientId === clientId), [clientId]);
+  const client = useMemo(() => clients.find(c => c.id === clientId), [clients, clientId]);
+  const clientOrders = useMemo(() => orders.filter(o => o.clientId === clientId), [orders, clientId]);
 
   if (!client) {
     return (
@@ -80,7 +81,7 @@ const ClientDetailPage: React.FC = () => {
           {clientOrders.length > 0 ? (
             <View className={styles.orderList}>
               {clientOrders.map(order => {
-                const quotation = mockQuotations.find(q => q.id === order.quotationId);
+                const quotation = quotations.find(q => q.id === order.quotationId);
                 return (
                   <View key={order.id} className={styles.orderItem}>
                     <View className={styles.orderInfo}>
